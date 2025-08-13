@@ -238,4 +238,4 @@ Highlighted text is included in the link."
 (let ((inhibit-message t)) ;; dont print messages while loading the package
   (org-add-link-type "pdf" 'org-pdf-open nil))
 
-(provide 'linkin-org-pdf-link-type)
+(provide 'linkin-org-pdf-link)
