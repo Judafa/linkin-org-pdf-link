@@ -6,7 +6,7 @@
 ;; Maintainer: Julien Dallot <judafa@protonmail.com>
 ;; URL: https://github.com/Judafa/linkin-org
 ;; Version: 1.0
-;; Package-Requires: ((emacs "30.1") (pdf-tools "1.1.0"))
+;; Package-Requires: ((emacs "30.1") (pdf-tools "1.1.0") (linkin-org "1.0"))
 
 ;; This file is not part of GNU Emacs
 
@@ -34,10 +34,24 @@
 
 (defun org-pdf-open (path link)
   "Open a LINK in string form with type pdf."
+  ;; if link is nil, recompute the link data from the path
+  (when (not link)
+    ;; parse the link
+    (setq link
+	  (linkin-org-resolve-link
+	   (with-temp-buffer
+	     (let ((org-inhibit-startup nil))
+	       (insert (concat "[[" path "]]"))
+	       (org-mode)
+	       (goto-char (point-min))
+	       (org-element-link-parser))
+	     )
+	   t ;; do not resolve the link path
+	   )
+	  )
+    )
   (let*
       (
-       ;; (link-parts (split-string link "::"))
-       ;; (file-path (car link-parts))
        (pdf-path (org-element-property :path link))
        (metadata (org-element-property :metadata link))
        (page (let ((page (plist-get metadata :page)))
@@ -47,40 +61,6 @@
 		 (when (numberp metadata ) metadata)
 		 )))
        (edges (plist-get metadata :edges))
-	     
-
-     ;;   (metadata (when (cadr link-parts)
-     ;;               (read (cadr link-parts))))
-     ;;   (pdf-file (car link-parts))
-     ;;   (page
-     ;;    (if (and (plistp metadata) (= 2 (length link-parts)))
-     ;;        ;; if the link is with the plist format
-     ;;        (plist-get metadata :page)
-     ;;      ;; else if the data is just separated by ::
-     ;;      (string-to-number (car (cdr link-parts)))))
-       
-     ;; 	   (edges-list
-     ;;    (if (and (plistp metadata) (= 2 (length link-parts)))
-     ;;        ;; if the link is with the new plist format
-     ;;        (let*
-     ;; 	            (
-     ;;             (edges-raw-str (plist-get metadata :edges))
-     ;;             (edges-list-str (when edges-raw-str
-     ;;                               (split-string edges-raw-str ";")))
-     ;;             )
-     ;; 	          ;; convert from string to int, get a list of four floating points numbers, that's the edges
-     ;; 	          (when edges-list-str (list (mapcar #'string-to-number edges-list-str))))
-     ;;      ;; else if the data is just separated by ::
-     ;; 	      (let*
-     ;;          (
-     ;;           (edges-str (car (cdr (cdr link-parts))))
-     ;; 	           ;; separate the edges by |
-     ;; 	           (edges-list-str (when edges-str (split-string edges-str "[;|]"))))
-     ;; 	        ;; convert from string to int, get a list of four floating points numbers, that's the edges
-     ;; 	        (when edges-list-str (list (mapcar #'string-to-number edges-list-str))))))
-     ;; 	   ;; (path+page+edges (split-string link "::"))
-     ;; 	 ;; ;; for the pdf file path
-     ;; ;;     (pdf-file (car path+page+edges))
 	 )
 	     
     ;; (start-process "view-pdf" nil "zathura" pdf-file (format "--page=%s" page))))
