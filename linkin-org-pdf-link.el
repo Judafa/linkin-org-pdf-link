@@ -32,52 +32,64 @@
 
 
 
-(defun org-pdf-open (link)
+(defun org-pdf-open (path link)
   "Open a LINK in string form with type pdf."
   (let*
       (
-	   (link-parts (split-string link "::"))
-	   (file-path (car link-parts))
-       (metadata (when (cadr link-parts)
-                   (read (cadr link-parts))))
-       (pdf-file (car link-parts))
-       (page
-        (if (and (plistp metadata) (= 2 (length link-parts)))
-            ;; if the link is with the plist format
-            (plist-get metadata :page)
-          ;; else if the data is just separated by ::
-          (string-to-number (car (cdr link-parts)))))
+       ;; (link-parts (split-string link "::"))
+       ;; (file-path (car link-parts))
+       (pdf-path (org-element-property :path link))
+       (metadata (org-element-property :metadata link))
+       (page (let ((page (plist-get metadata :page)))
+	       (if page
+		   page
+		 ;; if the metadata is not a plist, then check if it is a number; it is the page number then
+		 (when (numberp metadata ) metadata)
+		 )))
+       (edges (plist-get metadata :edges))
+	     
+
+     ;;   (metadata (when (cadr link-parts)
+     ;;               (read (cadr link-parts))))
+     ;;   (pdf-file (car link-parts))
+     ;;   (page
+     ;;    (if (and (plistp metadata) (= 2 (length link-parts)))
+     ;;        ;; if the link is with the plist format
+     ;;        (plist-get metadata :page)
+     ;;      ;; else if the data is just separated by ::
+     ;;      (string-to-number (car (cdr link-parts)))))
        
-	   (edges-list
-        (if (and (plistp metadata) (= 2 (length link-parts)))
-            ;; if the link is with the new plist format
-            (let*
-	            (
-                 (edges-raw-str (plist-get metadata :edges))
-                 (edges-list-str (when edges-raw-str
-                                   (split-string edges-raw-str ";")))
-                 )
-	          ;; convert from string to int, get a list of four floating points numbers, that's the edges
-	          (when edges-list-str (list (mapcar #'string-to-number edges-list-str))))
-          ;; else if the data is just separated by ::
-	      (let*
-              (
-               (edges-str (car (cdr (cdr link-parts))))
-	           ;; separate the edges by |
-	           (edges-list-str (when edges-str (split-string edges-str "[;|]"))))
-	        ;; convert from string to int, get a list of four floating points numbers, that's the edges
-	        (when edges-list-str (list (mapcar #'string-to-number edges-list-str))))))
-	   ;; (path+page+edges (split-string link "::"))
-	 ;; ;; for the pdf file path
-     ;;     (pdf-file (car path+page+edges))
+     ;; 	   (edges-list
+     ;;    (if (and (plistp metadata) (= 2 (length link-parts)))
+     ;;        ;; if the link is with the new plist format
+     ;;        (let*
+     ;; 	            (
+     ;;             (edges-raw-str (plist-get metadata :edges))
+     ;;             (edges-list-str (when edges-raw-str
+     ;;                               (split-string edges-raw-str ";")))
+     ;;             )
+     ;; 	          ;; convert from string to int, get a list of four floating points numbers, that's the edges
+     ;; 	          (when edges-list-str (list (mapcar #'string-to-number edges-list-str))))
+     ;;      ;; else if the data is just separated by ::
+     ;; 	      (let*
+     ;;          (
+     ;;           (edges-str (car (cdr (cdr link-parts))))
+     ;; 	           ;; separate the edges by |
+     ;; 	           (edges-list-str (when edges-str (split-string edges-str "[;|]"))))
+     ;; 	        ;; convert from string to int, get a list of four floating points numbers, that's the edges
+     ;; 	        (when edges-list-str (list (mapcar #'string-to-number edges-list-str))))))
+     ;; 	   ;; (path+page+edges (split-string link "::"))
+     ;; 	 ;; ;; for the pdf file path
+     ;; ;;     (pdf-file (car path+page+edges))
 	 )
+	     
     ;; (start-process "view-pdf" nil "zathura" pdf-file (format "--page=%s" page))))
     (progn
       ;; (message edges-list)
       ;; check if the pdf file is already open
       (if-let (
 	       ;; get the buffer of the pdf file
-	       (pdf-buffer (get-file-buffer pdf-file))
+	       (pdf-buffer (get-file-buffer pdf-path))
 
 	       ;; check if the buffer is visible
 	       (pdf-window (get-buffer-window pdf-buffer 'visible))
@@ -140,13 +152,13 @@
 		    (when page
 		      (pdf-view-goto-page page))
 		    ;; ;; hightlight the edges
-		    (when edges-list
+		    (when edges
 		      (let
 			  ;; idk then do the same here
 			  ;; [[file:~/.config/emacs/straight/repos/pdf-tools/lisp/pdf-occur.el::290][[file] pdf-occur.el_at_290]]
 			  (
 			   (pdf-isearch-batch-mode t)
-			   (pixel-match (pdf-util-scale-relative-to-pixel edges-list)))
+			   (pixel-match (pdf-util-scale-relative-to-pixel (list edges))))
 			;; dont forget to scale the edges to the current display!
 			(pdf-isearch-hl-matches pixel-match nil t)
 			(pdf-isearch-focus-match-batch pixel-match)))
@@ -157,7 +169,7 @@
 	    (progn
 	      ;; (message "not visible")
 	      (clone-frame)
-	      (find-file pdf-file)
+	      (find-file pdf-path)
 	      (pdf-view-goto-page page))
 	    ;; (if linkin-org-open-pdf-link-other-frame
 	    ;; 	  (progn
@@ -230,7 +242,7 @@ Highlighted text is included in the link."
 	      ;; edges are actually outputed as a list of list of Lists-trees
 	      (edges (car (car edges)))
 	      ;; concat the edges with |
-	      (string-edges (concat "\"" (mapconcat #'prin1-to-string edges ";") "\"" )))
+	      (string-edges (concat "(" (mapconcat #'prin1-to-string edges " ") ")" )))
 
 	   ;; (format "[[pdf:%s::%s::%s][[pdf] %s _ p%s _ \"%s\"]]" file page string-edges nom-fichier-tronque page selected-text)
 	   ;; without the pdf name
