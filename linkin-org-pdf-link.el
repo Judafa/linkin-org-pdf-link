@@ -238,4 +238,19 @@ Highlighted text is included in the link."
 (let ((inhibit-message t)) ;; dont print messages while loading the package
   (org-add-link-type "pdf" 'org-pdf-open nil))
 
+
+;; add the facilities to obtain pdf links
+
+(defun linkin-org-pdf-link-get (func)
+  (let ((mode (symbol-name major-mode)))
+    (if (string= (symbol-name major-mode) "pdf-view-mode")
+	(kill-new (linkin-org-pdf-get-link))
+      ;; else, run the normal linkin-org-get function
+      (funcall func)
+      )
+    )
+  )
+
+(advice-add 'linkin-org-get :around #'linkin-org-pdf-link-get)
+
 (provide 'linkin-org-pdf-link)
