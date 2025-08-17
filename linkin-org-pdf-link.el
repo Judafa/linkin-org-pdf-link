@@ -27,8 +27,11 @@
 ;; The links are meant to be created with the function linkin-org-get defined in the package linkin-org (https://github.com/Judafa/linkin-org)
 
 (require 'ol)
+(require 'org-element)
 (require 'dired)
 (require 'pdf-tools)
+(require 'pdf-isearch)
+(require 'linkin-org)
 
 
 
@@ -45,7 +48,8 @@
 	       (org-mode)
 	       (goto-char (point-min))
 	       (org-element-link-parser)))
-	   t ;; do not resolve the link path)))
+	   t ;; do not resolve the link path
+	   )))
   (let*
       (
        (pdf-path (org-element-property :path link))
