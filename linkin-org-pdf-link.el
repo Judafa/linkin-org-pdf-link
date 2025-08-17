@@ -44,12 +44,8 @@
 	       (insert (concat "[[" path "]]"))
 	       (org-mode)
 	       (goto-char (point-min))
-	       (org-element-link-parser))
-	     )
-	   t ;; do not resolve the link path
-	   )
-	  )
-    )
+	       (org-element-link-parser)))
+	   t ;; do not resolve the link path)))
   (let*
       (
        (pdf-path (org-element-property :path link))
@@ -58,10 +54,8 @@
 	       (if page
 		   page
 		 ;; if the metadata is not a plist, then check if it is a number; it is the page number then
-		 (when (numberp metadata ) metadata)
-		 )))
-       (edges (plist-get metadata :edges))
-	 )
+		 (when (numberp metadata ) metadata))))
+       (edges (plist-get metadata :edges)))
 	     
     ;; (start-process "view-pdf" nil "zathura" pdf-file (format "--page=%s" page))))
     (progn
@@ -70,27 +64,17 @@
       (if-let (
 	       ;; get the buffer of the pdf file
 	       (pdf-buffer (get-file-buffer pdf-path))
-
 	       ;; check if the buffer is visible
 	       (pdf-window (get-buffer-window pdf-buffer 'visible))
-
                ;; Trouve toutes les fenêtres qui affichent le buffer donné en entrée
                (windows (delq (selected-window)
                               (get-buffer-window-list
                                pdf-buffer 'nomini t)))
-	       
                ;; la première de ces fenêtres
                (fenetre-finale (car windows))
-	       
                ;; On initialise le temps le plus récent avec la temps de la première fenêtre de la liste
                (temps-le-plus-recent (window-use-time fenetre-finale))
-
-	       ;; (not linkin-org-open-org-link-other-frame)
 	       )
-	       ;; (pdf-buffer (get-file-buffer pdf-file))
-	       ;; ;; check if the buffer is visible
-	       ;; (pdf-window (get-buffer-window pdf-buffer 'visible))
-			  ;; )
 	      ;; then dont open a new frame, rather switch to the last visisted window and highlight the edges
 	      (progn
                    ;; Parmi celles qui affichent le buffer, séléctionne la fenêtre la plus récement utilisée
@@ -99,7 +83,6 @@
                          (progn
                            (setq temps-le-plus-recent (window-use-time fenetre))
                            (setq pdf-window fenetre))))
-
 		   (let (
 			 (initial-window (selected-window)))
 		     ;; switch to the frame
@@ -107,7 +90,6 @@
 		    ;; (select-frame (window-frame pdf-window))
 		    ;; switch to the window
 		    (select-window pdf-window)
-
 		    ;; (if edges-list
 		    ;;     ;; if the place to highlight is provided, then make sure that place is visible (ie, pdf is scrolled so that one can see it)
 		    ;;     (let
@@ -126,8 +108,6 @@
 		    ;;     (pdf-view-goto-page page)
 		    ;;     )
 		    ;;   )
-
-
 		    ;; go to the page
 		    (when page
 		      (pdf-view-goto-page page))
@@ -165,8 +145,7 @@
 Highlighted text is included in the link."
   (other-window 1)
   (pdf-tools-assert-pdf-buffer)
-  (let* (
-	 (page (number-to-string (pdf-view-current-page)))
+  (let* ((page (number-to-string (pdf-view-current-page)))
          (file (abbreviate-file-name (pdf-view-buffer-file-name)))
 	 (file-name (file-name-nondirectory file))
 	 (file-name-sans-id (linkin-org-strip-off-id-from-file-name file-name))
@@ -183,14 +162,12 @@ Highlighted text is included in the link."
 			    ;; delete the newlines
 			    (replace-regexp-in-string "\n" " " (car (pdf-view-active-region-text)))
 			  nil))
-
 	 ;; ;; truncate the selected text
 	 ;; (selected-text (if (and selected-text (> (length selected-text) 15))
 	 ;; 			     (concat (substring selected-text 0 15) "...")
 	 ;; 			   selected-text
 	 ;; 			   )
 	 ;; 			 )
-
 	 ;; for the edges
 	 (edges (if (pdf-view-active-region-p)
                 ;; the edges that were really hovered by the mouse.
@@ -200,7 +177,6 @@ Highlighted text is included in the link."
                 ;;  pdf-view-active-region
                 ;;  pdf-view-selection-style
                 ;;  )
-              
                 (mapcar
                  (lambda (edges)
                    (pdf-info-getselection
@@ -210,20 +186,16 @@ Highlighted text is included in the link."
                  pdf-view-active-region)
 		      nil)))
     (other-window 1)
-
     ;; deselect the text, if there is an active region
     (if (pdf-view-active-region-p)
 	(pdf-view-deactivate-region))
-
     (if (and selected-text edges)
 	(progn
 	 (let*
-	     (
-	      ;; edges are actually outputed as a list of list of Lists-trees
+	     (;; edges are actually outputed as a list of list of Lists-trees
 	      (edges (car (car edges)))
 	      ;; concat the edges with |
 	      (string-edges (concat "(" (mapconcat #'prin1-to-string edges " ") ")" )))
-
 	   ;; (format "[[pdf:%s::%s::%s][[pdf] %s _ p%s _ \"%s\"]]" file page string-edges nom-fichier-tronque page selected-text)
 	   ;; without the pdf name
 	   ;; (format "[[pdf:%s::%s::%s][[pdf] p%s _ \"%s\"]]" file page string-edges page selected-text)
@@ -246,10 +218,7 @@ Highlighted text is included in the link."
     (if (string= (symbol-name major-mode) "pdf-view-mode")
 	(kill-new (linkin-org-pdf-get-link))
       ;; else, run the normal linkin-org-get function
-      (funcall func)
-      )
-    )
-  )
+      (funcall func))))
 
 (advice-add 'linkin-org-get :around #'linkin-org-pdf-link-get)
 
