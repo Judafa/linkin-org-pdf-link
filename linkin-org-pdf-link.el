@@ -147,7 +147,6 @@
 (defun linkin-org-pdf-get-link ()
   "Return a link in string form to the pdf in the current buffer.
 Highlighted text is included in the link."
-  (other-window 1)
   (pdf-tools-assert-pdf-buffer)
   (let* ((page (number-to-string (pdf-view-current-page)))
          (file (abbreviate-file-name (pdf-view-buffer-file-name)))
