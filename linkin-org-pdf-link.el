@@ -1,4 +1,4 @@
-;;; linkin-org.el --- an emacs workflow with fast, reliable links -*- lexical-binding: t -*-
+;;; linkin-org-pdf-link.el --- A linkin-org extension that defines links towards pdf files -*- lexical-binding: t -*-
 
 ;; Copyright 2025 Julien Dallot
 
@@ -23,8 +23,10 @@
 ;; limitations under the License. 
 
 ;;; Commentary:
-;; This package defines a pdf link that opens a pdf (if needed) and, if the information is provided, jump to a specific page and highlight a specific region in the pdf.
-;; The links are meant to be created with the function linkin-org-get defined in the package linkin-org (https://github.com/Judafa/linkin-org)
+;; This package defines a pdf link that jumps to a specific page
+;; and highlights a specific region in the pdf.
+;; The links are meant to be created with the function linkin-org-get
+;; defined in the package linkin-org (https://github.com/Judafa/linkin-org)
 
 (require 'ol)
 (require 'org-element)
@@ -35,7 +37,7 @@
 
 
 
-(defun org-pdf-open (path link)
+(defun linkin-org-pdf-link-open (path link)
   "Open a LINK in string form with type pdf."
   ;; if link is nil, recompute the link data from the path
   (when (not link)
@@ -75,17 +77,17 @@
                               (get-buffer-window-list
                                pdf-buffer 'nomini t)))
                ;; la première de ces fenêtres
-               (fenetre-finale (car windows))
+               (final-window (car windows))
                ;; On initialise le temps le plus récent avec la temps de la première fenêtre de la liste
-               (temps-le-plus-recent (window-use-time fenetre-finale))
+               (most-recent-time-stamp (window-use-time final-window))
 	       )
 	      ;; then dont open a new frame, rather switch to the last visisted window and highlight the edges
 	      (progn
                    ;; Parmi celles qui affichent le buffer, séléctionne la fenêtre la plus récement utilisée
                    (dolist (fenetre (cdr windows))
-                     (if (> (window-use-time fenetre) temps-le-plus-recent)
+                     (if (> (window-use-time fenetre) most-recent-time-stamp)
                          (progn
-                           (setq temps-le-plus-recent (window-use-time fenetre))
+                           (setq most-recent-time-stamp (window-use-time fenetre))
                            (setq pdf-window fenetre))))
 		   (let (
 			 (initial-window (selected-window)))
@@ -144,7 +146,7 @@
 	    ))))
 
 ;; pour copier un lien vers le fichier pdf courant
-(defun linkin-org-pdf-get-link ()
+(defun linkin-org-pdf-link-get-link ()
   "Return a link in string form to the pdf in the current buffer.
 Highlighted text is included in the link."
   (pdf-tools-assert-pdf-buffer)
@@ -154,7 +156,7 @@ Highlighted text is included in the link."
 	 (file-name-sans-id (linkin-org-strip-off-id-from-file-name file-name))
 	 (file-name-sans-ext (file-name-sans-extension file-name-sans-id))
 	 (file-name-extension (file-name-extension file-name-sans-id))
-	 (nom-fichier-tronque (if (> (length file-name-sans-ext) 70)
+	 (truncated-file-name (if (> (length file-name-sans-ext) 70)
 				  (concat (substring file-name-sans-ext 0 50)
 					  "[___]"
 					  (if file-name-extension
@@ -187,7 +189,7 @@ Highlighted text is included in the link."
                     edges
                     pdf-view-selection-style))
                  pdf-view-active-region)
-		      nil)))
+		nil)))
     (other-window 1)
     ;; deselect the text, if there is an active region
     (if (pdf-view-active-region-p)
@@ -205,13 +207,13 @@ Highlighted text is included in the link."
 	   (format "[[pdf:%s::(:page %s :edges %s)][[pdf] p%s _ \"%s\"]]" file page string-edges page selected-text)))
       ;; else, no selected text, just care about the path and page
       ;; (format "[[pdf:%s::%s][[pdf] %s _ p%s]]" file page nom-fichier-tronque page)
-      (format "[[pdf:%s::(:page %s)][[pdf] %s _ p%s]]" file page nom-fichier-tronque page))))
+      (format "[[pdf:%s::(:page %s)][[pdf] %s _ p%s]]" file page truncated-file-name page))))
 
 
 
 ;;;; add the link type
 (let ((inhibit-message t)) ;; dont print messages while loading the package
-  (org-add-link-type "pdf" 'org-pdf-open nil))
+  (org-add-link-type "pdf" 'linkin-org-pdf-link-open nil))
 
 
 ;; add the facilities to obtain pdf links
@@ -219,7 +221,7 @@ Highlighted text is included in the link."
 (defun linkin-org-pdf-link-get (func)
   (let ((mode (symbol-name major-mode)))
     (if (string= (symbol-name major-mode) "pdf-view-mode")
-	(kill-new (linkin-org-pdf-get-link))
+	(kill-new (linkin-org-pdf-link-get-link))
       ;; else, run the normal linkin-org-get function
       (funcall func))))
 
