@@ -228,6 +228,6 @@ Highlighted text is included in the link."
 
 (advice-add 'linkin-org-get :around #'linkin-org-pdf-link-redirect-link-opening)
 
-(provide 'linkin-org-pdf-link)  
+(provide 'linkin-org-pdf-link)
 
 ;;; linkin-org-pdf-link.el ends here
