@@ -20,7 +20,7 @@
 ;; distributed under the License is distributed on an "AS IS" BASIS,
 ;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ;; See the License for the specific language governing permissions and
-;; limitations under the License. 
+;; limitations under the License.
 
 ;;; Commentary:
 ;; This package defines a pdf link that jumps to a specific page
@@ -37,8 +37,11 @@
 
 
 
+;;; Code:
+
 (defun linkin-org-pdf-link-open (path link)
-  "Open a LINK in string form with type pdf."
+  "Open a LINK in an org element form with type pdf.
+If link is nil, use PATH to open the pdf."
   ;; if link is nil, recompute the link data from the path
   (when (not link)
     ;; parse the link
@@ -50,8 +53,8 @@
 	       (org-mode)
 	       (goto-char (point-min))
 	       (org-element-link-parser)))
-	   t ;; do not resolve the link path
-	   )))
+	   ;; do not resolve the link path
+	   t)))
   (let*
       (
        (pdf-path (org-element-property :path link))
@@ -62,7 +65,6 @@
 		 ;; if the metadata is not a plist, then check if it is a number; it is the page number then
 		 (when (numberp metadata ) metadata))))
        (edges (plist-get metadata :edges)))
-	     
     ;; (start-process "view-pdf" nil "zathura" pdf-file (format "--page=%s" page))))
     (progn
       ;; (message edges-list)
@@ -72,18 +74,18 @@
 	       (pdf-buffer (get-file-buffer pdf-path))
 	       ;; check if the buffer is visible
 	       (pdf-window (get-buffer-window pdf-buffer 'visible))
-               ;; Trouve toutes les fenêtres qui affichent le buffer donné en entrée
+	       ;; Find all windows that currently display the given buffer
                (windows (delq (selected-window)
                               (get-buffer-window-list
                                pdf-buffer 'nomini t)))
-               ;; la première de ces fenêtres
+	       ;; initialized the final window to pick with the first of those windows
                (final-window (car windows))
-               ;; On initialise le temps le plus récent avec la temps de la première fenêtre de la liste
-               (most-recent-time-stamp (window-use-time final-window))
-	       )
-	      ;; then dont open a new frame, rather switch to the last visisted window and highlight the edges
+	       ;; intialize the most recent timestamp with that of the first window
+               (most-recent-time-stamp (window-use-time final-window)))
+	  ;; if there already exists a window whose buffer displays the pdf then dont open a new frame
+	  ;; rather switch to the last visisted window and highlight the edges
 	      (progn
-                   ;; Parmi celles qui affichent le buffer, séléctionne la fenêtre la plus récement utilisée
+		;; Among the windows which currently display the pdf buffer, select the most recently used
                    (dolist (fenetre (cdr windows))
                      (if (> (window-use-time fenetre) most-recent-time-stamp)
                          (progn
@@ -132,20 +134,20 @@
 		    (select-window initial-window)))
 	;; if the pdf file is not visible, open a new frame
 	;; or if I specifically asked to open a new frame for the pdf file
-	    (progn
-	      ;; (message "not visible")
-	      (clone-frame)
-	      (find-file pdf-path)
-	      (pdf-view-goto-page page))
-	    ;; (if linkin-org-open-pdf-link-other-frame
-	    ;; 	  (progn
-	    ;; 	    (find-file-other-frame pdf-file)
-	    ;; 	    (pdf-view-goto-page page)
-	    ;; 	    )
-	    ;; 	)
-	    ))))
+	(progn
+	  ;; (message "not visible")
+	  (clone-frame)
+	  (find-file pdf-path)
+	  (pdf-view-goto-page page))
+	;; (if linkin-org-open-pdf-link-other-frame
+	;; 	  (progn
+	;; 	    (find-file-other-frame pdf-file)
+	;; 	    (pdf-view-goto-page page)
+	;; 	    )
+	;; 	)
+	))))
 
-;; pour copier un lien vers le fichier pdf courant
+;; to copy a link towards the focused pdf buffer
 (defun linkin-org-pdf-link-get-link ()
   "Return a link in string form to the pdf in the current buffer.
 Highlighted text is included in the link."
@@ -217,14 +219,15 @@ Highlighted text is included in the link."
 
 
 ;; add the facilities to obtain pdf links
-
-(defun linkin-org-pdf-link-get (func)
+(defun linkin-org-pdf-link-redirect-link-opening (func)
   (let ((mode (symbol-name major-mode)))
     (if (string= (symbol-name major-mode) "pdf-view-mode")
 	(kill-new (linkin-org-pdf-link-get-link))
       ;; else, run the normal linkin-org-get function
       (funcall func))))
 
-(advice-add 'linkin-org-get :around #'linkin-org-pdf-link-get)
+(advice-add 'linkin-org-get :around #'linkin-org-pdf-link-redirect-link-opening)
 
-(provide 'linkin-org-pdf-link)
+(provide 'linkin-org-pdf-link)  
+
+;;; linkin-org-pdf-link.el ends here
