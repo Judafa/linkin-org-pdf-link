@@ -215,7 +215,7 @@ Highlighted text is included in the link."
 	    ;; without the pdf name
 	    ;; (format "[[pdf:%s::%s::%s][[pdf] p%s _ \"%s\"]]" file page string-edges page selected-text)
 	    (format
-	     "[[pdf:%s::(:page %s :edges %s)][[pdf] p%s _ \"%s\"]]" file page string-edges page selected-text)))
+	     "[[pdf:%s::(:page %s :edges %s)][[pdf] \"%s\"]]" file page string-edges selected-text)))
       ;; else, no selected text, just care about the path and page
       ;; (format "[[pdf:%s::%s][[pdf] %s _ p%s]]" file page nom-fichier-tronque page)
       (format
