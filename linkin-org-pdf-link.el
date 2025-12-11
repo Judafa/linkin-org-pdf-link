@@ -40,7 +40,7 @@
 ;;; Code:
 
 (defun linkin-org-pdf-link-open (path link)
-  "Open a LINK in an org element form with type pdf.
+  "Open link LINK in org element format with type pdf.
 If link is nil, use PATH to open the pdf."
   ;; if link is nil, recompute the link data from the path
   (when (not link)
@@ -56,6 +56,12 @@ If link is nil, use PATH to open the pdf."
 	   ;; do not resolve the link path
 	   t)))
   (let* ((pdf-path (org-element-property :path link))
+	 ;; remove what's behind :: if any
+	 (pdf-path
+	  (let ((pos (string-match "::" pdf-path)))
+	    (if pos
+		(substring pdf-path 0 pos)
+	      pdf-path)))
 	 (metadata (org-element-property :metadata link))
 	 (page
 	  (let ((page (plist-get metadata :page)))
@@ -65,7 +71,6 @@ If link is nil, use PATH to open the pdf."
 	 (edges (plist-get metadata :edges)))
     ;; (start-process "view-pdf" nil "zathura" pdf-file (format "--page=%s" page))))
     (progn
-      ;; (message edges-list)
       ;; check if the pdf file is already open
       (if-let (;; get the buffer of the pdf file
 	       (pdf-buffer (get-file-buffer pdf-path))
