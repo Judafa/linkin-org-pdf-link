@@ -201,7 +201,7 @@ Highlighted text is included in the link."
                   (string-to-number page)
                   edges
                   pdf-view-selection-style))
-               pdf-view-active-region)
+               (cdr pdf-view-active-region))
 	    nil)))
     (other-window 1)
     ;; deselect the text, if there is an active region
